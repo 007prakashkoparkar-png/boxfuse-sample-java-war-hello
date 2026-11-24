@@ -1,10 +1,5 @@
 pipeline {
-  agent {
-    docker {
-      image 'maven:3.9.6-eclipse-temurin-21'
-      args '--user root -v /var/run/docker.sock:/var/run/docker.sock' // Mount Docker socket to build images
-    }
-  }
+  agent any
   stages {
     stage('Checkout') {
       steps {
@@ -13,12 +8,23 @@ pipeline {
       }
     }
     stage('Build and Test') {
+      agent {
+        docker {
+          image 'maven:3.9.6-eclipse-temurin-21'
+          reuseNode true
+        }
+      }
       steps {
-        sh 'ls -ltr'
         sh 'mvn clean package'
       }
     }
     stage('Static Code Analysis') {
+      agent {
+        docker {
+          image 'maven:3.9.6-eclipse-temurin-21'
+          reuseNode true
+        }
+      }
       environment {
         SONAR_URL = "http://13.201.99.189:9000"
       }
@@ -31,15 +37,12 @@ pipeline {
     stage('Build and Push Docker Image') {
       environment {
         DOCKER_IMAGE = "007prakashkoparkar/boxfuse-app:${env.BUILD_NUMBER}"
-        REGISTRY_CREDENTIALS = credentials('docker-cred')
       }
       steps {
-        script {
-            sh "docker build -t ${DOCKER_IMAGE} ."
-            def dockerImage = docker.image("${DOCKER_IMAGE}")
-            docker.withRegistry('https://docker.io', "docker-cred") {
-                dockerImage.push()
-            }
+        withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+          sh "docker build -t ${DOCKER_IMAGE} ."
+          sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+          sh "docker push ${DOCKER_IMAGE}"
         }
       }
     }
@@ -56,7 +59,6 @@ pipeline {
                     sed -i "s/replaceImageTag/${env.BUILD_NUMBER}/g" k8s-manifests/deployment.yml
                     git add k8s-manifests/deployment.yml
                     git commit -m "Update boxfuse image version to ${env.BUILD_NUMBER}"
-                    # FIXED: Corrected the malformed shell syntax and variable formatting
                     git push https://${GITHUB_TOKEN}@://github.com{GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main
                 """
             }
@@ -64,4 +66,3 @@ pipeline {
     }
   }
 }
-
