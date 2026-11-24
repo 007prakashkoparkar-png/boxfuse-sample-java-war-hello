@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: boxfuse-deployment
+  labels:
+    app: boxfuse-app
+spec:
+  replicas: 2 # Runs 2 parallel instances for high availability
+  selector:
+    matchLabels:
+      app: boxfuse-app
+  template:
+    metadata:
+      labels:
+        app: boxfuse-app
+    spec:
+      containers:
+      - name: boxfuse-container
+        # The Jenkins pipeline automatically swaps 'replaceImageTag' with the active ${BUILD_NUMBER}
+        image: 007prakashkoparkar/boxfuse-app:replaceImageTag
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080 # Standard port for Tomcat/Java applications

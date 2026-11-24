@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: boxfuse-service
+  labels:
+    app: boxfuse-app
+spec:
+  type: NodePort # Changes to 'LoadBalancer' if deploying on managed cloud engines like AWS EKS or Azure AKS
+  ports:
+  - port: 80        # The port exposed outside the cluster
+    targetPort: 8080 # The internal containerPort your application listens on
+    nodePort: 30080  # Optional: Pins the external node access port (range 30000-32767)
+  selector:
+    app: boxfuse-app # Explicitly routes external network requests directly to the deployment pods
+
