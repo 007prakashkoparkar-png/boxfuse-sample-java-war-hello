@@ -54,9 +54,9 @@ pipeline {
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                 sh """
-                    # 1. Clone the dedicated GitOps repository
-                    git clone https://${GITHUB_TOKEN}@://github.com{GIT_USER_NAME}/${GIT_REPO_NAME}.git
-                    cd ${GIT_REPO_NAME}
+                    # 1. Clone the dedicated GitOps repository (FIXED URL)
+                    git clone https://\${GITHUB_TOKEN}@://github.com\${GIT_USER_NAME}/\${GIT_REPO_NAME}.git
+                    cd \${GIT_REPO_NAME}
                     
                     # 2. Configure Git identity details
                     git config user.email "prakash.xyz@gmail.com"
