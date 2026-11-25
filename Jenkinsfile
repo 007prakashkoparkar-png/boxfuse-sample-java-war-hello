@@ -26,7 +26,7 @@ pipeline {
         }
       }
       environment {
-        SONAR_URL = "http://13.201.99.189:9000"
+        SONAR_URL = "http://13.201.193.113:9000"
       }
       steps {
         withCredentials([string(credentialsId: 'sonarqube', variable: 'SONAR_AUTH_TOKEN')]) {
@@ -54,12 +54,21 @@ pipeline {
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                 sh """
+                    # 1. Clone the dedicated GitOps repository
+                    git clone https://${GITHUB_TOKEN}@://github.com{GIT_USER_NAME}/${GIT_REPO_NAME}.git
+                    cd ${GIT_REPO_NAME}
+                    
+                    # 2. Configure Git identity details
                     git config user.email "prakash.xyz@gmail.com"
                     git config user.name "Prakash Koparkar"
+                    
+                    # 3. Modify the tag reference inside the correct cloned path
                     sed -i "s/replaceImageTag/${env.BUILD_NUMBER}/g" k8s-manifests/deployment.yml
+                    
+                    # 4. Stage, commit, and push the updated track back to GitHub
                     git add k8s-manifests/deployment.yml
                     git commit -m "Update boxfuse image version to ${env.BUILD_NUMBER}"
-                    git push https://${GITHUB_TOKEN}@://github.com{GIT_USER_NAME}/${GIT_REPO_NAME}.git HEAD:main
+                    git push origin main
                 """
             }
         }
