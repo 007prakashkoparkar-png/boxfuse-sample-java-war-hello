@@ -50,16 +50,21 @@ pipeline {
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                 sh '''
+                    # 1. Clear out old repository workspace if it exists
                     rm -rf boxfuse-gitops-repo
                     
+                    # 2. Clone the GitOps infrastructure repository cleanly
                     git clone "https://${GITHUB_TOKEN}@://github.com"
                     cd boxfuse-gitops-repo
                     
+                    # 3. Configure local Git identity details
                     git config user.email "prakash.xyz@gmail.com"
                     git config user.name "Prakash Koparkar"
                     
+                    # 4. Swap deployment placeholder text with actual active build number sequence
                     sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" k8s-manifests/deployment.yml
                     
+                    # 5. Track, commit, and push changes cleanly back up to GitHub
                     git add k8s-manifests/deployment.yml
                     git commit -m "Update boxfuse image version to ${BUILD_NUMBER}"
                     git push origin main
