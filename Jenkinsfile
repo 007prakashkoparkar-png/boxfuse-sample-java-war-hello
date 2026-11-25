@@ -49,26 +49,22 @@ pipeline {
     stage('Update Deployment File') {
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                sh """
-                    # 1. Clean old tracking data if any exists
+                // Using single quotes prevents early Groovy string mangling
+                sh '''
                     rm -rf boxfuse-gitops-repo
                     
-                    # 2. Clone the GitOps repository using a simplified URL format
-                    git clone https://\${GITHUB_TOKEN}@://github.com
+                    git clone "https://${GITHUB_TOKEN}@://github.com"
                     cd boxfuse-gitops-repo
                     
-                    # 3. Configure Git user details
                     git config user.email "prakash.xyz@gmail.com"
                     git config user.name "Prakash Koparkar"
                     
-                    # 4. Replace the deployment placeholder tag with the current build number
-                    sed -i "s/replaceImageTag/${env.BUILD_NUMBER}/g" k8s-manifests/deployment.yml
+                    sed -i "s/replaceImageTag/${BUILD_NUMBER}/g" k8s-manifests/deployment.yml
                     
-                    # 5. Commit and push the manifest update back to GitHub
                     git add k8s-manifests/deployment.yml
-                    git commit -m "Update boxfuse image version to ${env.BUILD_NUMBER}"
+                    git commit -m "Update boxfuse image version to ${BUILD_NUMBER}"
                     git push origin main
-                """
+                '''
             }
         }
     }
