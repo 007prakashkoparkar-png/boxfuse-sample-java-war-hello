@@ -49,7 +49,6 @@ pipeline {
     stage('Update Deployment File') {
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                // Using single quotes prevents early Groovy string mangling
                 sh '''
                     rm -rf boxfuse-gitops-repo
                     
