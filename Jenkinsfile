@@ -47,25 +47,24 @@ pipeline {
       }
     }
     stage('Update Deployment File') {
-        environment {
-            GIT_REPO_NAME = "boxfuse-gitops-repo" 
-            GIT_USER_NAME = "007prakashkoparkar"
-        }
         steps {
             withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                 sh """
-                    # 1. Clone the dedicated GitOps repository (FIXED TYPO)
-                    git clone https://\${GITHUB_TOKEN}@://github.com\${GIT_USER_NAME}/\text{GIT_REPO_NAME}.git
-                    cd \${GIT_REPO_NAME}
+                    # 1. Clean old tracking data if any exists
+                    rm -rf boxfuse-gitops-repo
                     
-                    # 2. Configure Git identity details
+                    # 2. Clone the GitOps repository using a simplified URL format
+                    git clone https://\${GITHUB_TOKEN}@://github.com
+                    cd boxfuse-gitops-repo
+                    
+                    # 3. Configure Git user details
                     git config user.email "prakash.xyz@gmail.com"
                     git config user.name "Prakash Koparkar"
                     
-                    # 3. Modify the tag reference inside the correct cloned path
+                    # 4. Replace the deployment placeholder tag with the current build number
                     sed -i "s/replaceImageTag/${env.BUILD_NUMBER}/g" k8s-manifests/deployment.yml
                     
-                    # 4. Stage, commit, and push the updated track back to GitHub
+                    # 5. Commit and push the manifest update back to GitHub
                     git add k8s-manifests/deployment.yml
                     git commit -m "Update boxfuse image version to ${env.BUILD_NUMBER}"
                     git push origin main
