@@ -15,7 +15,7 @@ pipeline {
         }
       }
       steps {
-        sh 'mvn clean package -Dmaven.repo.local=.m2/repository'
+        sh 'mvn clean package -U -Dmaven.repo.local=.m2/repository'
       }
     }
     stage('Static Code Analysis') {
